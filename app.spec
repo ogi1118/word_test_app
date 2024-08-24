@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('vocabulary_books', 'vocabulary_books')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
