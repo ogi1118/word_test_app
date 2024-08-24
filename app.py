@@ -21,6 +21,17 @@ from pdf2image import convert_from_path
 from PIL import Image
 import tempfile
 
+
+def resource_path(relative_path):
+    """Returns the absolute path to a resource, works for development and PyInstaller"""
+    try:
+        # PyInstallerの実行時には、このコードが `_MEIPASS`を使用する
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # 開発時やPyInstaller以外の環境ではカレントディレクトリを使用
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 # 単語帳の読み込み
 def load_vocabulary(file_path):
     if not os.path.exists(file_path):
@@ -51,8 +62,8 @@ def create_test():
                 raise ValueError("開始Noが終了Noより大きい、または開始Noが0以下です。")
 
         file_paths = {
-            "システム英単語": "vocabulary_books/system_English_vocabularyBook.txt",
-            "出る順パス単": "vocabulary_books/deru_jun_pasutan.txt"
+            "システム英単語": resource_path("vocabulary_books/system_English_vocabularyBook.txt"),
+            "出る順パス単": resource_path("vocabulary_books/deru_jun_pasutan.txt")
         }
 
         file_path = file_paths.get(selected_book)
@@ -97,6 +108,7 @@ def create_test():
         messagebox.showerror("入力エラー", str(e))
     except Exception as e:
         messagebox.showerror("エラー", f"予期しないエラーが発生しました:\n{e}")
+
 
 # Wordファイルの作成
 def create_word_file(selected_words, start_no, end_no):
@@ -223,7 +235,8 @@ def convert_docx_to_image_pdf(docx_path):
     convert(docx_path, pdf_path)
 
     # Popplerのパスを指定してPDFを画像に変換
-    images = convert_from_path(pdf_path, poppler_path=os.path.join(os.getcwd(), 'poppler', 'bin'))
+    poppler_path = resource_path('poppler/bin')
+    images = convert_from_path(pdf_path, poppler_path=poppler_path)
 
     image_pdf_path = pdf_path.replace('.pdf', '_image.pdf')
     c = canvas.Canvas(image_pdf_path, pagesize=letter)
@@ -239,6 +252,7 @@ def convert_docx_to_image_pdf(docx_path):
     c.save()
     print(f"PDF file saved as images: {image_pdf_path}")
     return image_pdf_path
+
 
 # テストの印刷処理
 def print_test(pdf_path, num_copies, include_answers, pdf_path_ans, printer_name):
