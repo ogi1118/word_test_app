@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('vocabulary_books', 'vocabulary_books')],
+    datas=[('vocabulary_books', 'vocabulary_books'), ('C:\\\\Users\\\\81705\\\\src\\\\wordTest\\\\poppler\\\\bin', 'poppler/bin')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
