@@ -126,13 +126,13 @@ def create_word_file(selected_words, start_no, end_no):
                     space_count = max(1, 40 - len(word1))
                     spaces = ' ' * space_count
                     paragraph = doc.add_paragraph()
-                    run = paragraph.add_run(f"{block[i]['No']}. {word1}{spaces}{block[i+1]['No']}. {word2}")
+                    run = paragraph.add_run(f"No.{i + 1} {word1}{spaces}No.{i + 2} {word2}")
                     paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.LEFT
                     run.font.size = Pt(11)
                     run.font.name = 'メイリオ'
                 else:
                     paragraph = doc.add_paragraph()
-                    run = paragraph.add_run(f"{block[i]['No']}. {block[i]['Word']}")
+                    run = paragraph.add_run(f"No.{i + 1} {block[i]['Word']}")
                     paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.LEFT
                     run.font.size = Pt(11)
                     run.font.name = 'メイリオ'
@@ -166,11 +166,11 @@ def create_ans_file(selected_words, start_no, end_no):
         for i in range(0, len(block), 2):
             if i + 1 < len(block):
                 paragraph = doc_ans.add_paragraph()
-                run = paragraph.add_run(f"{block[i]['No']}. {block[i]['meaning']}        {block[i+1]['No']}. {block[i+1]['meaning']}")
+                run = paragraph.add_run(f"No.{i + 1} {block[i]['meaning']}        No.{i + 2} {block[i+1]['meaning']}")
                 run.font.size = Pt(11)
             else:
                 paragraph = doc_ans.add_paragraph()
-                run = paragraph.add_run(f"{block[i]['No']}. {block[i]['meaning']}")
+                run = paragraph.add_run(f"No.{i + 1} {block[i]['meaning']}")
                 run.font.size = Pt(11)
 
     for paragraph in doc_ans.paragraphs:
