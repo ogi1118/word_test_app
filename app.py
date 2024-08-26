@@ -287,7 +287,7 @@ book_label = tk.Label(root, text="単語帳を選択:")
 book_label.grid(row=0, column=0, padx=10, pady=10, sticky="e")
 book_var = tk.StringVar()
 book_menu = ttk.Combobox(root, textvariable=book_var)
-book_menu['values'] = ("システム英単語", "出る順パス単")
+book_menu['values'] = ("システム英単語")
 book_menu.grid(row=0, column=1, padx=10, pady=10)
 
 start_no_label = tk.Label(root, text="開始No.:")
