@@ -25,7 +25,7 @@ import tempfile
 def resource_path(relative_path):
     """Returns the absolute path to a resource, works for development and PyInstaller"""
     try:
-        # PyInstallerの実行時には、このコードが `_MEIPASS`を使用する
+        # PyInstallerの実行時には、このコードが _MEIPASSを使用する
         base_path = sys._MEIPASS
     except AttributeError:
         # 開発時やPyInstaller以外の環境ではカレントディレクトリを使用
@@ -114,33 +114,56 @@ def create_test():
 def create_word_file(selected_words, start_no, end_no):
     try:
         doc = docx.Document()
+
+        # ページのマージンを設定
+        sections = doc.sections
+        for section in sections:
+            section.top_margin = docx.shared.Cm(2.0)    # 上マージンを2cmに設定
+            section.bottom_margin = docx.shared.Cm(2.0) # 下マージンを2cmに設定
+            section.left_margin = docx.shared.Cm(2.0)   # 左マージンを2cmに設定
+            section.right_margin = docx.shared.Cm(2.0)  # 右マージンを2cmに設定
+
         head = 'Vocabulary Test / ' + str(start_no) + ' ~ ' + str(end_no) + '       Name            Score'
         doc.add_paragraph(head).runs[0].font.size = Pt(18)
-        
+
         for block_start in range(0, len(selected_words), 50):
             block = selected_words[block_start:block_start + 50]
+            table = doc.add_table(rows=len(block)//2 + len(block)%2, cols=2)
+
             for i in range(0, len(block), 2):
+                word1 = block[i]['Word']
+                cell1 = table.cell(i//2, 0)
+                paragraph1 = cell1.paragraphs[0]
+                run1 = paragraph1.add_run(f"No.{block_start + i + 1} {word1}")
+                run1.font.size = Pt(11)  # 文字サイズを9ptに変更
+                run1.font.name = 'メイリオ'
+                
                 if i + 1 < len(block):
-                    word1 = block[i]['Word']
                     word2 = block[i + 1]['Word']
-                    space_count = max(1, 40 - len(word1))
-                    spaces = ' ' * space_count
-                    paragraph = doc.add_paragraph()
-                    run = paragraph.add_run(f"No.{(block_start * 50) + i + 1} {word1}{spaces}No.{(block_start * 50) + i + 2} {word2}")
-                    paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.LEFT
-                    run.font.size = Pt(11)
-                    run.font.name = 'メイリオ'
-                else:
-                    paragraph = doc.add_paragraph()
-                    run = paragraph.add_run(f"No.{(block_start * 50) + i + 1} {block[i]['Word']}")
-                    paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.LEFT
-                    run.font.size = Pt(11)
-                    run.font.name = 'メイリオ'
-        
-        for paragraph in doc.paragraphs:
-            paragraph_format = paragraph.paragraph_format
-            paragraph_format.space_after = Pt(0)
-        
+                    cell2 = table.cell(i//2, 1)
+                    paragraph2 = cell2.paragraphs[0]
+                    run2 = paragraph2.add_run(f"No.{block_start + i + 2} {word2}")
+                    run2.font.size = Pt(11)  # 文字サイズを9ptに変更
+                    run2.font.name = 'メイリオ'
+
+                # 行の高さを調整（行のスペースを小さくする）
+                paragraph_format1 = paragraph1.paragraph_format
+                paragraph_format1.line_spacing = Pt(25)  # 行間を狭く設定
+                paragraph_format1.space_after = Pt(0)  # 段落後のスペースを削除
+
+                paragraph_format2 = paragraph2.paragraph_format
+                paragraph_format2.line_spacing = Pt(10)
+                paragraph_format2.space_after = Pt(0)
+
+            # テーブルの罫線を非表示にする
+            for row in table.rows:
+                for cell in row.cells:
+                    for border in ('top', 'bottom', 'left', 'right'):
+                        cell._element.get_or_add_tcPr().append(docx.oxml.parse_xml(
+                            f'<w:tcBorders xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                            f'<w:{border} w:val="none"/></w:tcBorders>'
+                        ))
+
         desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
         save_folder = os.path.join(desktop_path, '単語テスト')
         if not os.path.exists(save_folder):
@@ -151,42 +174,92 @@ def create_word_file(selected_words, start_no, end_no):
         print(f"File saved: {save_path}")
         return save_path
     except Exception as e:
-        messagebox.showerror("ファイル作成エラー", f"Wordファイルの作成中にエラーが発生しました\nもう一度やり直してください:\n{e}")
+        error_message = f"Wordファイルの作成中にエラーが発生しました:\n{str(e)}\n"
+        error_message += f"Error type: {type(e).__name__}\n"
+        messagebox.showerror("ファイル作成エラー", error_message)
         raise
+
+
 
 
 # 答えのファイルを作成
 def create_ans_file(selected_words, start_no, end_no):
-    doc_ans = docx.Document()
-    head_ans = 'Vocabulary Test Answers / ' + str(start_no) + ' ~ ' + str(end_no)
-    doc_ans.add_paragraph(head_ans).runs[0].font.size = Pt(18)
+    try:
+        doc_ans = docx.Document()
 
-    for block_start in range(0, len(selected_words), 50):
-        block = selected_words[block_start:block_start + 50]
-        for i in range(0, len(block), 2):
-            if i + 1 < len(block):
-                paragraph = doc_ans.add_paragraph()
-                run = paragraph.add_run(f"No.{(block_start * 50) + i + 1} {block[i]['meaning']}        No.{(block_start * 50) + i + 2} {block[i+1]['meaning']}")
-                run.font.size = Pt(11)
-            else:
-                paragraph = doc_ans.add_paragraph()
-                run = paragraph.add_run(f"No.{(block_start * 50) + i + 1} {block[i]['meaning']}")
-                run.font.size = Pt(11)
+        # ページのマージンを設定（各2.0cm）
+        sections = doc_ans.sections
+        for section in sections:
+            section.top_margin = docx.shared.Cm(2.0)    # 上マージンを2cmに設定
+            section.bottom_margin = docx.shared.Cm(2.0) # 下マージンを2cmに設定
+            section.left_margin = docx.shared.Cm(2.0)   # 左マージンを2cmに設定
+            section.right_margin = docx.shared.Cm(2.0)  # 右マージンを2cmに設定
 
-    for paragraph in doc_ans.paragraphs:
-        paragraph_format = paragraph.paragraph_format
-        paragraph_format.space_after = Pt(0)
+        head_ans = 'Vocabulary Test Answers / ' + str(start_no) + ' ~ ' + str(end_no)
+        doc_ans.add_paragraph(head_ans).runs[0].font.size = Pt(18)
 
-    desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-    save_folder = os.path.join(desktop_path, '単語テスト')
+        for block_start in range(0, len(selected_words), 50):
+            block = selected_words[block_start:block_start + 50]
+            table = doc_ans.add_table(rows=len(block)//2 + len(block)%2, cols=2)
 
-    if not os.path.exists(save_folder):
-        os.makedirs(save_folder)
+            for i in range(0, len(block), 2):
+                meaning1 = block[i]['meaning']
+                cell1 = table.cell(i//2, 0)
+                paragraph1 = cell1.paragraphs[0]
+                run1 = paragraph1.add_run(f"No.{block_start + i + 1} {meaning1}")
+                run1.font.size = Pt(11)  # 文字サイズを11ptに変更
+                run1.font.name = 'メイリオ'
 
-    save_path_ans = os.path.join(save_folder, 'vocabulary_test_answers.docx')
-    doc_ans.save(save_path_ans)
+                if i + 1 < len(block):
+                    meaning2 = block[i + 1]['meaning']
+                    cell2 = table.cell(i//2, 1)
+                    paragraph2 = cell2.paragraphs[0]
+                    run2 = paragraph2.add_run(f"No.{block_start + i + 2} {meaning2}")
+                    run2.font.size = Pt(11)  # 文字サイズを11ptに変更
+                    run2.font.name = 'メイリオ'
 
-    return save_path_ans
+                # 行の高さを調整
+                paragraph_format1 = paragraph1.paragraph_format
+                paragraph_format1.line_spacing = Pt(20)  # 行間を設定
+                paragraph_format1.space_after = Pt(0)    # 段落後のスペースを削除
+
+                paragraph_format2 = paragraph2.paragraph_format
+                paragraph_format2.line_spacing = Pt(12)
+                paragraph_format2.space_after = Pt(0)
+
+            # テーブルの罫線を非表示にする
+            for row in table.rows:
+                for cell in row.cells:
+                    for border in ('top', 'bottom', 'left', 'right'):
+                        cell._element.get_or_add_tcPr().append(docx.oxml.parse_xml(
+                            f'<w:tcBorders xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                            f'<w:{border} w:val="none"/></w:tcBorders>'
+                        ))
+
+        for paragraph in doc_ans.paragraphs:
+            paragraph_format = paragraph.paragraph_format
+            paragraph_format.space_after = Pt(0)
+
+        desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+        save_folder = os.path.join(desktop_path, '単語テスト')
+
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder)
+
+        save_path_ans = os.path.join(save_folder, 'vocabulary_test_answers.docx')
+        doc_ans.save(save_path_ans)
+
+        print(f"File saved: {save_path_ans}")
+        return save_path_ans
+
+    except Exception as e:
+        error_message = f"Wordファイルの作成中にエラーが発生しました:\n{str(e)}\n"
+        error_message += f"Error type: {type(e).__name__}\n"
+        messagebox.showerror("ファイル作成エラー", error_message)
+        raise
+
+
+
 
 # WordファイルをPDFに変換
 def convert_docx_to_pdf(docx_path):
@@ -238,7 +311,7 @@ def convert_docx_to_image_pdf(docx_path):
     poppler_path = resource_path('poppler/bin')
     images = convert_from_path(pdf_path, poppler_path=poppler_path)
 
-    image_pdf_path = pdf_path.replace('.pdf', '_image.pdf')
+    image_pdf_path = pdf_path
     c = canvas.Canvas(image_pdf_path, pagesize=letter)
     
     # 画像を一時ファイルとして保存してからPDFに追加
