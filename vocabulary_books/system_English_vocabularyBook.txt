@@ -160,7 +160,7 @@
 160	spoil	～を台無しにする
 161	shift	～を変える
 162	embarrass	～を困惑させる、～に恥ずかしい思いをさせる
-163	approve	賛成する；～を承認する
+163	approve	賛成する、～を承認する
 164	weigh	～の重さがある、～を比較検討する、よく考える
 165	stretch	～を広げる
 166	participate	Aに参加する
