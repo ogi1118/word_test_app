@@ -63,7 +63,7 @@ def create_test():
 
         file_paths = {
             "システム英単語": resource_path("vocabulary_books/system_English_vocabularyBook.txt"),
-            "出る順パス単": resource_path("vocabulary_books/deru_jun_pasutan.txt")
+            "ターゲット1900": resource_path("vocabulary_books/target1900.txt")
         }
 
         file_path = file_paths.get(selected_book)
@@ -88,7 +88,7 @@ def create_test():
         words_in_range = [word for word in vocabulary if start_no <= word["No"] <= end_no]
         selected_words = random.sample(words_in_range, num_words)
         
-        docx_path = create_word_file(selected_words, start_no, end_no)
+        docx_path = create_word_file(selected_words, start_no, end_no, selected_book)
         
         if use_image_pdf:
             pdf_path = convert_docx_to_image_pdf(docx_path)
@@ -97,7 +97,7 @@ def create_test():
         
         pdf_path_ans = ""
         if include_answers:
-            docx_path_ans = create_ans_file(selected_words, start_no, end_no)
+            docx_path_ans = create_ans_file(selected_words, start_no, end_no, selected_book)
             if use_image_pdf:
                 pdf_path_ans = convert_docx_to_image_pdf(docx_path_ans)
             else:
@@ -111,7 +111,7 @@ def create_test():
 
 
 # Wordファイルの作成
-def create_word_file(selected_words, start_no, end_no):
+def create_word_file(selected_words, start_no, end_no, selected_book):
     try:
         doc = docx.Document()
 
@@ -169,7 +169,7 @@ def create_word_file(selected_words, start_no, end_no):
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
         
-        save_path = os.path.join(save_folder, 'vocabulary_test.docx')
+        save_path = os.path.join(save_folder, ('vocabulary_test_' + selected_book + '.docx'))
         doc.save(save_path)
         print(f"File saved: {save_path}")
         return save_path
@@ -183,7 +183,7 @@ def create_word_file(selected_words, start_no, end_no):
 
 
 # 答えのファイルを作成
-def create_ans_file(selected_words, start_no, end_no):
+def create_ans_file(selected_words, start_no, end_no, selected_book):
     try:
         doc_ans = docx.Document()
 
@@ -207,7 +207,7 @@ def create_ans_file(selected_words, start_no, end_no):
                 cell1 = table.cell(i//2, 0)
                 paragraph1 = cell1.paragraphs[0]
                 run1 = paragraph1.add_run(f"No.{block_start + i + 1} {meaning1}")
-                run1.font.size = Pt(11)  # 文字サイズを11ptに変更
+                run1.font.size = Pt(10)  # 文字サイズを11ptに変更
                 run1.font.name = 'メイリオ'
 
                 if i + 1 < len(block):
@@ -215,16 +215,16 @@ def create_ans_file(selected_words, start_no, end_no):
                     cell2 = table.cell(i//2, 1)
                     paragraph2 = cell2.paragraphs[0]
                     run2 = paragraph2.add_run(f"No.{block_start + i + 2} {meaning2}")
-                    run2.font.size = Pt(11)  # 文字サイズを11ptに変更
+                    run2.font.size = Pt(10)  # 文字サイズを11ptに変更
                     run2.font.name = 'メイリオ'
 
                 # 行の高さを調整
                 paragraph_format1 = paragraph1.paragraph_format
-                paragraph_format1.line_spacing = Pt(20)  # 行間を設定
+                paragraph_format1.line_spacing = Pt(19)  # 行間を設定
                 paragraph_format1.space_after = Pt(0)    # 段落後のスペースを削除
 
                 paragraph_format2 = paragraph2.paragraph_format
-                paragraph_format2.line_spacing = Pt(12)
+                paragraph_format2.line_spacing = Pt(11)
                 paragraph_format2.space_after = Pt(0)
 
             # テーブルの罫線を非表示にする
@@ -246,7 +246,7 @@ def create_ans_file(selected_words, start_no, end_no):
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
 
-        save_path_ans = os.path.join(save_folder, 'vocabulary_test_answers.docx')
+        save_path_ans = os.path.join(save_folder, 'vocabulary_test_answers_' + selected_book + '.docx')
         doc_ans.save(save_path_ans)
 
         print(f"File saved: {save_path_ans}")
@@ -360,7 +360,7 @@ book_label = tk.Label(root, text="単語帳を選択:")
 book_label.grid(row=0, column=0, padx=10, pady=10, sticky="e")
 book_var = tk.StringVar()
 book_menu = ttk.Combobox(root, textvariable=book_var)
-book_menu['values'] = ("システム英単語")
+book_menu['values'] = ("システム英単語", "ターゲット1900")
 book_menu.grid(row=0, column=1, padx=10, pady=10)
 
 start_no_label = tk.Label(root, text="開始No.:")
