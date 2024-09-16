@@ -4,7 +4,7 @@ import json
 import os
 import docx
 import random
-from docx.shared import Pt
+from docx.shared import Pt, Cm
 import win32print
 import win32api
 from tkinter import simpledialog
@@ -123,8 +123,15 @@ def create_word_file(selected_words, start_no, end_no, selected_book):
             section.left_margin = docx.shared.Cm(2.0)   # 左マージンを2cmに設定
             section.right_margin = docx.shared.Cm(2.0)  # 右マージンを2cmに設定
 
-        head = 'Vocabulary Test / ' + str(start_no) + ' ~ ' + str(end_no) + '       Name            Score'
-        doc.add_paragraph(head).runs[0].font.size = Pt(18)
+        # ヘッダーの作成
+        head = 'Vocabulary Test / ' + str(start_no) + ' ~ ' + str(end_no) + ' Name_____________________  /' + str(len(selected_words))
+        paragraph = doc.add_paragraph()
+        run = paragraph.add_run(head)
+        run.font.size = Pt(17)
+
+        # タブストップの設定
+        tab_stops = paragraph.paragraph_format.tab_stops
+        tab_stop = tab_stops.add_tab_stop(Cm(10))  # 10cmの位置にタブストップを設定
 
         for block_start in range(0, len(selected_words), 50):
             block = selected_words[block_start:block_start + 50]
